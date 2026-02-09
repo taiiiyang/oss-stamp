@@ -1,6 +1,5 @@
 import { i18n } from '#i18n'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { ContributorTag } from './ContributorTag'
 import { OverallMetrics } from './OverallMetrics'
 import { RepoMetrics } from './RepoMetrics'
 import { ScoreHeader } from './ScoreHeader'
@@ -21,7 +20,6 @@ export function ScoreCard() {
           <OverallMetrics />
         </TabsContent>
       </Tabs>
-      <ContributorTag />
     </div>
   )
 }

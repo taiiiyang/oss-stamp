@@ -12,13 +12,6 @@ export interface ContributorScore {
   }
 }
 
-export type ContributionPattern
-  = | 'code-heavy'
-    | 'review-heavy'
-    | 'issue-only'
-    | 'new-contributor'
-    | 'maintainer'
-
 export function getTier(score: number): 'S' | 'A' | 'B' | 'C' | 'D' {
   if (score >= 90)
     return 'S'
@@ -82,30 +75,6 @@ export function calculateScore(
       recency,
     },
   }
-}
-
-export function getContributionPattern(
-  repoData: RepoContribution,
-  globalData: GlobalContribution | null | undefined,
-): ContributionPattern {
-  if (repoData.firstContributionAt) {
-    const firstDate = new Date(repoData.firstContributionAt)
-    const threeMonthsAgo = new Date()
-    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
-    if (firstDate > threeMonthsAgo)
-      return 'new-contributor'
-  }
-
-  if (repoData.reviewsGiven > repoData.mergedPRs * 2)
-    return 'review-heavy'
-
-  if (repoData.mergedPRs === 0 && repoData.reviewsGiven === 0)
-    return 'issue-only'
-
-  if (globalData && globalData.globalMergedPRs > 100)
-    return 'maintainer'
-
-  return 'code-heavy'
 }
 
 export function formatActiveSince(dateStr: string | null): string {
