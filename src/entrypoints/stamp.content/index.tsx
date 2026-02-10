@@ -1,8 +1,8 @@
 import { createStore } from 'jotai'
 import ReactDOM from 'react-dom/client'
 import { currentRepoAtom, prAuthorAtom } from '@/atoms/pr-page'
-import { ScoreCard } from '@/components/stamp/ScoreCard'
-import { AppProviders } from '@/providers/AppProviders'
+import { ScoreCard } from '@/components/stamp/score-card'
+import { AppProviders } from '@/providers/app-providers'
 import {
   getPRAuthor,
   isPRPage,

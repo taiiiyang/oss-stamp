@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useHasToken } from '@/hooks/use-has-token'
 import { RateLimitError } from '@/lib/github-rest'
 import { formatAccountAge } from '@/lib/scoring'
-import { MetricRow } from './MetricRow'
+import { MetricRow } from './metric-row'
 
 function MetricsSkeleton() {
   return (
