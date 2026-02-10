@@ -1,8 +1,8 @@
 import { i18n } from '#i18n'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { OverallMetrics } from './OverallMetrics'
-import { RepoMetrics } from './RepoMetrics'
-import { ScoreHeader } from './ScoreHeader'
+import { OverallMetrics } from './overall-metrics'
+import { RepoMetrics } from './repo-metrics'
+import { ScoreHeader } from './score-header'
 
 export function ScoreCard() {
   return (
