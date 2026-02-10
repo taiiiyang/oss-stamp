@@ -6,7 +6,7 @@ import { ScoreHeader } from './ScoreHeader'
 
 export function ScoreCard() {
   return (
-    <div className="bg-background text-foreground pb-3 mb-3 border-b border-border">
+    <div className="bg-card text-card-foreground rounded-lg border border-border p-4 mb-4">
       <ScoreHeader />
       <Tabs defaultValue="repo">
         <TabsList className="mt-3">
