@@ -1,4 +1,4 @@
-name: Release
+name: Release Extension
 
 on:
   push:
@@ -6,32 +6,62 @@ on:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   release:
-    name: Release
+    name: Release Extension
     runs-on: ubuntu-latest
+    env:
+      HUSKY: 0
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
 
-      - name: Create Release Pull Request or Publish
+      - name: Create Release Pull Request or Tag
         id: changesets
         uses: changesets/action@v1
         with:
-          version: pnpm changeset version
-          publish: pnpm run zip
+          commit: 'chore(release): version packages'
+          title: 'chore(release): version packages'
+          publish: pnpm changeset tag
+          createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload Chrome Extension
+      - name: Build and Zip Extension
         if: steps.changesets.outputs.published == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: chrome-extension
-          path: .output/*.zip
+        run: pnpm zip
+
+      - name: Upload Extension Zip to Release
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          VERSION=$(echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -r '.[0].version')
+          gh release upload "v$VERSION" .output/*.zip --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      # - name: Submit to Chrome Web Store
+      #   if: steps.changesets.outputs.published == 'true'
+      #   run: |
+      #     ZIP_FILE=$(ls .output/*-chrome.zip)
+      #     pnpm wxt submit --chrome-zip "$ZIP_FILE"
+      #   env:
+      #     CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+      #     CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+      #     CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+      #     CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
