@@ -1,3 +1,5 @@
+import { githubToken } from '@/lib/token-storage'
+
 export interface RepoContribution {
   mergedPRs: number
   totalPRs: number
@@ -30,9 +32,15 @@ export class RateLimitError extends GitHubApiError {
 }
 
 async function githubFetch(url: string): Promise<Response> {
-  const res = await fetch(url, {
-    headers: { Accept: 'application/vnd.github.v3+json' },
-  })
+  const token = await githubToken.getValue()
+  const headers: Record<string, string> = {
+    Accept: 'application/vnd.github.v3+json',
+  }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`
+  }
+
+  const res = await fetch(url, { headers })
 
   if (res.status === 403 || res.status === 429) {
     const reset = res.headers.get('x-ratelimit-reset')

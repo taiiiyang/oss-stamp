@@ -1,3 +1,5 @@
+import { githubTheme } from '@/lib/token-storage'
+
 /**
  * Parse owner and repo from a GitHub URL.
  * Matches: https://github.com/{owner}/{repo}/...
@@ -34,11 +36,14 @@ export function isPRPage(url: string): boolean {
 /**
  * Set up dark mode synchronization between GitHub host page and Shadow DOM container.
  * Reads GitHub's data-color-mode attribute and toggles .dark class on the container.
+ * Also persists the theme to storage so the popup can follow the same theme.
  */
 export function setupDarkMode(container: HTMLElement): MutationObserver {
   const sync = () => {
     const mode = document.documentElement.getAttribute('data-color-mode')
-    container.classList.toggle('dark', mode === 'dark')
+    const isDark = mode === 'dark'
+    container.classList.toggle('dark', isDark)
+    void githubTheme.setValue(isDark ? 'dark' : 'light')
   }
   sync()
 
