@@ -17,13 +17,4 @@ errorLoad: Unable to load contributor data
 errorRateLimit: Rate limited. Try again later.
 noData: No contributions found
 retry: Retry
-errorRateLimitHint: Add a token in the extension popup to increase the limit.
-popupTitle: GitHub Token
-popupDescription: Add a personal access token to increase the API rate limit from 60 to 5,000 requests per hour.
-popupTokenPlaceholder: ghp_…
-popupSave: Save Token
-popupRemove: Remove
-popupValidating: Validating…
-popupSuccess: Authenticated as @$1 — $2 requests/hr
-popupError: Invalid token. Check the value and try again.
-popupNoToken: No token configured. Using unauthenticated requests (60/hr).
+popupInfo: Shows contributor health metrics on GitHub pull request pages.

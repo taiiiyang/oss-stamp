@@ -17,13 +17,4 @@ errorLoad: 无法加载贡献者数据
 errorRateLimit: 速率受限，请稍后重试
 noData: 未找到贡献记录
 retry: 重试
-errorRateLimitHint: 在扩展弹窗中添加令牌以提高限制。
-popupTitle: GitHub 令牌
-popupDescription: 添加个人访问令牌，将 API 速率限制从每小时 60 次提高到 5,000 次。
-popupTokenPlaceholder: ghp_…
-popupSave: 保存令牌
-popupRemove: 移除
-popupValidating: 验证中…
-popupSuccess: 已认证为 @$1 — 每小时 $2 次请求
-popupError: 令牌无效，请检查后重试。
-popupNoToken: 未配置令牌，使用未认证请求（60 次/小时）。
+popupInfo: 在 GitHub Pull Request 页面上显示贡献者健康指标。
