@@ -1,0 +1,23 @@
+{
+  "name": "@oss-stamp/api",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "tsc --noEmit",
+    "check": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@octokit/auth-app": "^7.1.0",
+    "@octokit/request": "^9.1.0",
+    "@orpc/server": "^1",
+    "@oss-stamp/contract": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@vercel/node": "^5.0.0"
+  }
+}

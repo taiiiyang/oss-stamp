@@ -2,7 +2,6 @@ import { i18n } from '#i18n'
 import { useAtom } from 'jotai'
 import { globalContributorAtom } from '@/atoms/contributor-global'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useHasToken } from '@/hooks/use-has-token'
 import { RateLimitError } from '@/lib/github-rest'
 import { formatAccountAge } from '@/lib/scoring'
 import { MetricRow } from './metric-row'
@@ -21,8 +20,6 @@ function MetricsSkeleton() {
 export function OverallMetrics() {
   const [{ data, isPending, isError, error, refetch }]
     = useAtom(globalContributorAtom)
-  const hasToken = useHasToken()
-
   if (isPending)
     return <MetricsSkeleton />
 
@@ -31,9 +28,6 @@ export function OverallMetrics() {
     return (
       <div className="py-2 text-center text-sm text-muted-foreground">
         <p>{isRateLimit ? i18n.t('errorRateLimit') : i18n.t('errorLoad')}</p>
-        {isRateLimit && !hasToken && (
-          <p className="mt-1 text-xs">{i18n.t('errorRateLimitHint')}</p>
-        )}
         <button
           type="button"
           onClick={() => refetch()}

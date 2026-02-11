@@ -12,7 +12,7 @@ export default defineConfig({
     description: '__MSG_extDescription__',
     default_locale: 'en',
     permissions: ['storage'],
-    host_permissions: ['*://*.github.com/*'],
+    host_permissions: ['*://*.github.com/*', 'https://oss-stamp.vercel.app/*'],
     icons: {
       16: '/icon-16.png',
       32: '/icon-32.png',

@@ -26,7 +26,7 @@ export default antfu({
     ignores: ['**/*.md/**'],
     languageOptions: {
       parserOptions: {
-        project: './tsconfig.json',
+        project: true,
       },
     },
     rules: {

@@ -1,0 +1,43 @@
+{
+  "name": "@oss-stamp/extension",
+  "type": "module",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "check": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "zip": "wxt zip",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "@orpc/client": "^1",
+    "@orpc/contract": "^1",
+    "@oss-stamp/contract": "workspace:*",
+    "@tanstack/react-query": "^5.90.20",
+    "@wxt-dev/i18n": "^0.2.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "jotai": "^2.17.1",
+    "jotai-tanstack-query": "^0.11.0",
+    "lucide-react": "^0.563.0",
+    "radix-ui": "^1.4.3",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwind-merge": "^3.4.0"
+  },
+  "devDependencies": {
+    "@eslint-react/eslint-plugin": "^2.12.2",
+    "@tailwindcss/vite": "^4.1.18",
+    "@tanstack/eslint-plugin-query": "^5.91.4",
+    "@types/react": "^19.2.13",
+    "@types/react-dom": "^19.2.3",
+    "@wxt-dev/module-react": "^1.1.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "tailwindcss": "^4.1.18",
+    "wxt": "^0.20.14"
+  }
+}
