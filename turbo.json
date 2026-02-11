@@ -10,6 +10,9 @@
       "persistent": true
     },
     "check": {},
-    "lint": {}
+    "lint": {},
+    "lint:fix": {
+      "cache": false
+    }
   }
 }

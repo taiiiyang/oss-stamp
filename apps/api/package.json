@@ -7,7 +7,8 @@
     "dev": "vercel dev",
     "build": "tsc --noEmit",
     "check": "tsc --noEmit",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@octokit/auth-app": "^7.1.0",

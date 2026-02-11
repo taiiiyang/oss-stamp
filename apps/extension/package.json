@@ -8,6 +8,7 @@
     "build": "wxt build",
     "check": "tsc --noEmit",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "zip": "wxt zip",
     "postinstall": "wxt prepare"
   },
