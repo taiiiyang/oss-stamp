@@ -33,7 +33,6 @@ web-ext.config.ts
 !.env.local.example
 
 coverage/
-.turbo/
 .nx/
 
 tsconfig.local.json
