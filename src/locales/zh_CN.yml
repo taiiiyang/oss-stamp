@@ -1,0 +1,37 @@
+extName: OSS Stamp
+extDescription: GitHub 贡献者健康指标
+contributorScore: 贡献者评分
+points: 分
+tabThisRepo: 当前项目
+tabOverall: 总览
+prsMerged: 合并的 PR
+mergeRate: 合并率
+reviewsGiven: 给出的 Review
+activeSince: 活跃时长
+globalPrs: 全局 PR
+commitsYear: 年度 Commits
+accountAge: 账号年龄
+followers: 关注者
+loading: 加载中...
+errorLoad: 无法加载贡献者数据
+errorRateLimit: 速率受限，请稍后重试
+noData: 未找到贡献记录
+retry: 重试
+popupInfo: 在 GitHub Pull Request 页面上显示贡献者健康指标。
+tokenLabel: GitHub 个人访问令牌
+tokenPlaceholder: ghp_xxxxxxxxxxxx
+tokenSave: 保存
+tokenClear: 清除
+tokenValid: 令牌有效
+tokenInvalid: 令牌无效
+tokenNone: 未配置令牌
+tokenGuide: 创建令牌（无需勾选权限）
+tokenHowTo: 如何获取令牌：
+tokenStep1: 1. 点击下方链接打开 GitHub 令牌设置
+tokenStep2: 2. 无需勾选任何权限 — 直接点击「Generate token」
+tokenStep3: 3. 复制令牌并粘贴到上方输入框
+rateLimitAuth: 已认证：5,000 请求/小时
+rateLimitUnauth: 未认证：60 请求/小时
+optionsTitle: 设置
+optionsAuthSection: 身份认证
+optionsAuthDesc: 配置 GitHub 个人访问令牌，将 API 速率限制从每小时 60 次提升至 5,000 次。

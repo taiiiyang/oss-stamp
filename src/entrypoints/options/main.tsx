@@ -1,7 +1,7 @@
 import ReactDOM from 'react-dom/client'
 import { githubTheme } from '@/lib/token-storage'
 import { App } from './app'
-import './style.css'
+import '@/assets/styles/theme.css'
 
 function syncTheme() {
   void githubTheme.getValue().then((theme) => {

@@ -1,0 +1,37 @@
+extName: OSS Stamp
+extDescription: Contributor health metrics on GitHub
+contributorScore: CONTRIBUTOR SCORE
+points: points
+tabThisRepo: This Repo
+tabOverall: Overall
+prsMerged: PRs merged
+mergeRate: Merge rate
+reviewsGiven: Reviews given
+activeSince: Active since
+globalPrs: Global PRs
+commitsYear: Commits (yr)
+accountAge: Account age
+followers: Followers
+loading: Loading...
+errorLoad: Unable to load contributor data
+errorRateLimit: Rate limited. Try again later.
+noData: No contributions found
+retry: Retry
+popupInfo: Shows contributor health metrics on GitHub pull request pages.
+tokenLabel: GitHub Personal Access Token
+tokenPlaceholder: ghp_xxxxxxxxxxxx
+tokenSave: Save
+tokenClear: Clear
+tokenValid: Token is valid
+tokenInvalid: Token is invalid
+tokenNone: No token configured
+tokenGuide: Create a token (no scopes required)
+tokenHowTo: 'How to get a token:'
+tokenStep1: 1. Click the link below to open GitHub token settings
+tokenStep2: 2. No scopes are required — just click "Generate token"
+tokenStep3: 3. Copy the token and paste it above
+rateLimitAuth: 'Authenticated: 5,000 requests/hr'
+rateLimitUnauth: 'Unauthenticated: 60 requests/hr'
+optionsTitle: Settings
+optionsAuthSection: Authentication
+optionsAuthDesc: Configure your GitHub Personal Access Token to increase the API rate limit from 60 to 5,000 requests per hour.
