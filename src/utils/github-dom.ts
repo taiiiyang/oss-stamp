@@ -1,6 +1,32 @@
 import { githubTheme } from '@/lib/token-storage'
 
 /**
+ * Wait for a DOM element matching `selector` to appear.
+ * Resolves immediately if already present; otherwise uses MutationObserver.
+ * Returns `null` if the element does not appear within `timeout` ms.
+ */
+export function waitForElement(selector: string, timeout = 5000): Promise<Element | null> {
+  const el = document.querySelector(selector)
+  if (el)
+    return Promise.resolve(el)
+
+  return new Promise((resolve) => {
+    const observer = new MutationObserver(() => {
+      const found = document.querySelector(selector)
+      if (found) {
+        observer.disconnect()
+        resolve(found)
+      }
+    })
+    observer.observe(document.documentElement, { childList: true, subtree: true })
+    setTimeout(() => {
+      observer.disconnect()
+      resolve(null)
+    }, timeout)
+  })
+}
+
+/**
  * Parse owner and repo from a GitHub URL.
  * Matches: https://github.com/{owner}/{repo}/...
  */
@@ -12,25 +38,53 @@ export function parseRepoFromUrl(url: string): { owner: string, repo: string } |
 }
 
 /**
- * Get the PR author username from the current page DOM.
- * Tries multiple selectors for robustness.
+ * Parse owner, repo, and PR number from a GitHub PR URL.
+ * Returns null if the URL is not a PR page.
  */
-export function getPRAuthor(): string | null {
-  // Primary: the author link in the PR header
-  const authorEl
-    = document.querySelector('.gh-header-meta .author')
-      ?? document.querySelector('a.author[data-hovercard-type="user"]')
-      ?? document.querySelector('.pull-discussion-timeline .author')
-
-  return authorEl?.textContent?.trim() ?? null
+export function parsePRFromUrl(url: string): { owner: string, repo: string, prNumber: number } | null {
+  const match = url.match(/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/)
+  if (!match)
+    return null
+  return { owner: match[1], repo: match[2], prNumber: Number(match[3]) }
 }
 
 /**
- * Check if the current URL is a GitHub PR page.
- * Matches: /{owner}/{repo}/pull/{number}
+ * Detect GitHub SPA navigations via URL change detection.
+ *
+ * GitHub is migrating pages from Turbo Drive to React rendering,
+ * so Turbo events alone are unreliable. Instead we combine multiple
+ * signals and deduplicate with `lastUrl`:
+ *
+ * - `turbo:render` — immediate response for pages still using Turbo Drive
+ * - `popstate` — browser back/forward navigation
+ * - `setInterval` polling — catches `pushState` navigations from React pages
+ *   that fire no DOM events (content script isolated world cannot monkey-patch
+ *   `history.pushState`); 200ms is imperceptible with negligible overhead
+ *
+ * Returns a cleanup function that removes all listeners and stops polling.
  */
-export function isPRPage(url: string): boolean {
-  return /github\.com\/[^/]+\/[^/]+\/pull\/\d+/.test(url)
+export function onNavigate(callback: () => void): () => void {
+  let lastUrl = location.href
+
+  const check = () => {
+    if (location.href !== lastUrl) {
+      lastUrl = location.href
+      callback()
+    }
+  }
+
+  // Event-driven triggers (respond immediately when available)
+  document.addEventListener('turbo:render', check)
+  window.addEventListener('popstate', check)
+
+  // Polling fallback — catches pushState navigations that fire no events
+  const timer = setInterval(check, 200)
+
+  return () => {
+    document.removeEventListener('turbo:render', check)
+    window.removeEventListener('popstate', check)
+    clearInterval(timer)
+  }
 }
 
 /**
