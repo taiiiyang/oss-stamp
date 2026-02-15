@@ -1,5 +1,33 @@
+import { useQuery } from '@tanstack/react-query'
+import { useSetAtom } from 'jotai'
+import { useEffect } from 'react'
+import { currentRepoAtom, prAuthorAtom } from '@/atoms/pr-page'
 import { ScoreCard } from '@/components/stamp/score-card'
+import { fetchPRAuthor } from '@/lib/github-rest'
 
-export default function App() {
+interface Props {
+  owner: string
+  repo: string
+  prNumber: number
+}
+
+export default function App({ owner, repo, prNumber }: Props) {
+  const setAuthor = useSetAtom(prAuthorAtom)
+  const setRepo = useSetAtom(currentRepoAtom)
+
+  useEffect(() => {
+    setRepo({ owner, repo })
+  }, [owner, repo, setRepo])
+
+  const { data: author } = useQuery({
+    queryKey: ['pr-author', owner, repo, prNumber],
+    queryFn: () => fetchPRAuthor(owner, repo, prNumber),
+  })
+
+  useEffect(() => {
+    if (author)
+      setAuthor(author)
+  }, [author, setAuthor])
+
   return <ScoreCard />
 }

@@ -60,7 +60,15 @@ async function searchCount(query: string): Promise<number> {
   return data.total_count ?? 0
 }
 
-// —— Public API (signatures unchanged) ——
+// —— Public API ——
+
+export async function fetchPRAuthor(owner: string, repo: string, prNumber: number): Promise<string> {
+  const res = await githubFetch(
+    `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${prNumber}`,
+  )
+  const data = await res.json()
+  return data.user.login
+}
 
 export async function fetchRepoContribution(
   owner: string,
