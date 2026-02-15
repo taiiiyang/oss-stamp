@@ -1,84 +1,93 @@
+<div align="center">
+
+<!-- TODO: add banner image at assets/banner.png (logo + tagline) -->
+<!-- <img src="assets/banner.png" alt="OSS Stamp" width="600" /> -->
+
 # OSS Stamp
 
-> Contributor health metrics on GitHub — a browser extension that injects a Contributor Score card into pull request sidebars.
+**Contributor health metrics on GitHub**
+
+A browser extension that shows contributor score cards in pull request sidebars.
 
 [简体中文](./README.zh-CN.md) | English
 
+[![GitHub Stars](https://img.shields.io/github/stars/taiiiyang/oss-stamp?style=flat)](https://github.com/taiiiyang/oss-stamp)
+[![License](https://img.shields.io/github/license/taiiiyang/oss-stamp)](./LICENSE)
+[![Last Commit](https://img.shields.io/github/last-commit/taiiiyang/oss-stamp)](https://github.com/taiiiyang/oss-stamp/commits/main)
+
+<!-- TODO: uncomment when published -->
+<!-- [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/EXTENSION_ID)](https://chrome.google.com/webstore/detail/EXTENSION_ID) -->
+<!-- [![Firefox Add-ons](https://img.shields.io/amo/v/oss-stamp)](https://addons.mozilla.org/firefox/addon/oss-stamp) -->
+
+</div>
+
+## Demo
+
+<!-- TODO: add screenshot or GIF at assets/demo.gif showing the score card in a real GitHub PR sidebar -->
+<!-- <img src="assets/demo.gif" alt="OSS Stamp demo" width="700" /> -->
+
+> Screenshot coming soon — see [Install](#install) to try it yourself.
+
 ## Features
 
-- **Contributor Score Card** — Displays an overall score and tier (S/A/B/C/D) for PR authors directly in the GitHub sidebar
-- **Multi-dimensional Metrics** — Evaluates contribution count, merge rate, code reviews, tenure, and recency
-- **Dark Mode** — Follows GitHub's theme automatically
-- **Internationalization** — English and Simplified Chinese (via `@wxt-dev/i18n`)
+### Contributor Score Card
 
-## Tech Stack
+See a contributor's tier (S/A/B/C/D) and overall score at a glance, right in the GitHub PR sidebar.
 
-| Technology                                                              | Purpose                            |
-| ----------------------------------------------------------------------- | ---------------------------------- |
-| [WXT](https://wxt.dev)                                                  | Browser extension framework        |
-| [React 19](https://react.dev)                                           | UI library                         |
-| [Tailwind CSS v4](https://tailwindcss.com)                              | Utility-first styling              |
-| [Jotai](https://jotai.org)                                              | Atomic state management            |
-| [TanStack Query](https://tanstack.com/query)                            | Async data fetching & caching      |
-| [jotai-tanstack-query](https://github.com/jotaijs/jotai-tanstack-query) | Jotai + TanStack Query integration |
-| [Radix UI](https://www.radix-ui.com)                                    | Accessible UI primitives           |
-| [Lucide React](https://lucide.dev)                                      | Icon library                       |
-| TypeScript                                                              | Type safety                        |
+### Multi-dimensional Analysis
 
-## Getting Started
+Evaluates five dimensions: contribution count, merge rate, code reviews, tenure, and community presence.
 
-### Prerequisites
+### Dark Mode
 
-- [Node.js](https://nodejs.org) 22+
-- [pnpm](https://pnpm.io)
+Automatically matches GitHub's light or dark theme — no manual toggle needed.
 
-### Install
+### Multilingual
 
-```bash
-pnpm install
-```
+Supports English and 简体中文.
 
-### Development
+## How Scoring Works
 
-```bash
-# Chrome
-pnpm dev
+Each contributor is scored across five dimensions, normalized to 0–100:
 
-# Firefox
-pnpm dev:firefox
-```
+| Dimension     | What it measures                 |
+| ------------- | -------------------------------- |
+| Contributions | Number of merged pull requests   |
+| Merge Rate    | Ratio of merged PRs to total PRs |
+| Reviews       | Number of code reviews given     |
+| Tenure        | Time since first contribution    |
+| Presence      | Public repos and followers       |
 
-### Build
-
-```bash
-# Chrome
-pnpm build
-
-# Firefox
-pnpm build:firefox
-```
-
-## Scoring Algorithm
-
-The overall score is a weighted sum of five components, each normalized to 0–100:
-
-| Component    | Weight | Description                                     |
-| ------------ | ------ | ----------------------------------------------- |
-| Contribution | 40%    | Merged PR count (log scale, cap 50)             |
-| Merge Rate   | 15%    | Merged PRs / Total PRs                          |
-| Review       | 15%    | Reviews given (log scale, cap 30)               |
-| Tenure       | 15%    | Time since first contribution (up to 24 months) |
-| Recency      | 15%    | Public repos + followers (capped at 100)        |
+Contributions carry the most weight; the other four dimensions contribute equally.
 
 ### Tiers
 
-| Tier | Score Range |
-| ---- | ----------- |
-| S    | 90–100      |
-| A    | 70–89       |
-| B    | 50–69       |
-| C    | 30–49       |
-| D    | 0–29        |
+| Tier  | Score  |
+| ----- | ------ |
+| **S** | 90–100 |
+| **A** | 70–89  |
+| **B** | 50–69  |
+| **C** | 30–49  |
+| **D** | 0–29   |
+
+## Install
+
+### From Store
+
+> Coming soon — [star this repo](https://github.com/taiiiyang/oss-stamp) to get notified.
+
+### From Source
+
+```bash
+git clone https://github.com/taiiiyang/oss-stamp.git
+cd oss-stamp
+pnpm install && pnpm build
+```
+
+Then load the unpacked extension:
+
+- **Chrome**: go to `chrome://extensions` → enable Developer mode → Load unpacked → select `.output/chrome-mv3`
+- **Firefox**: go to `about:debugging#/runtime/this-firefox` → Load Temporary Add-on → select any file in `.output/firefox-mv2`
 
 ## Browser Support
 
@@ -87,19 +96,34 @@ The overall score is a weighted sum of five components, each normalized to 0–1
 | Chrome  | Supported |
 | Firefox | Supported |
 
-## Scripts
+<details>
+<summary><strong>Development</strong></summary>
 
-| Command              | Description                        |
-| -------------------- | ---------------------------------- |
-| `pnpm dev`           | Start development (Chrome)         |
-| `pnpm dev:firefox`   | Start development (Firefox)        |
-| `pnpm build`         | Production build (Chrome)          |
-| `pnpm build:firefox` | Production build (Firefox)         |
-| `pnpm zip`           | Package for distribution (Chrome)  |
-| `pnpm zip:firefox`   | Package for distribution (Firefox) |
-| `pnpm check`         | TypeScript type checking           |
-| `pnpm lint`          | Run ESLint                         |
-| `pnpm lint:fix`      | Run ESLint with auto-fix           |
+### Prerequisites
+
+- [Node.js](https://nodejs.org) 22+
+- [pnpm](https://pnpm.io)
+
+### Commands
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start dev server (Chrome)
+pnpm dev
+
+# Start dev server (Firefox)
+pnpm dev:firefox
+
+# Production build (Chrome)
+pnpm build
+
+# Production build (Firefox)
+pnpm build:firefox
+```
+
+</details>
 
 ## Contributing
 
@@ -108,12 +132,8 @@ The overall score is a weighted sum of five components, each normalized to 0–1
 3. Commit using [Conventional Commits](https://www.conventionalcommits.org)
 4. Push and open a Pull Request
 
-This project uses:
-
-- **[husky](https://typicode.github.io/husky)** — Git hooks
-- **[lint-staged](https://github.com/lint-staged/lint-staged)** — Pre-commit linting
-- **[commitlint](https://commitlint.js.org)** — Enforces conventional commit messages
+See [Development](#development) for setup instructions.
 
 ## License
 
-MIT
+[MIT](./LICENSE)
