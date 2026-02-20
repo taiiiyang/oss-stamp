@@ -30,6 +30,8 @@ export interface RepoContribution {
 
 export interface GlobalContribution {
   globalMergedPRs: number
+  globalTotalPRs: number
+  globalReviewsGiven: number
   followers: number
   createdAt: string
   publicRepos: number
@@ -96,15 +98,19 @@ export async function fetchRepoContribution(
 export async function fetchGlobalContribution(
   username: string,
 ): Promise<GlobalContribution> {
-  const [userRes, globalMergedPRs] = await Promise.all([
+  const [userRes, globalMergedPRs, globalTotalPRs, globalReviewsGiven] = await Promise.all([
     githubFetch(`https://api.github.com/users/${encodeURIComponent(username)}`),
     searchCount(`author:${username} is:pr is:merged`),
+    searchCount(`author:${username} is:pr`),
+    searchCount(`is:pr reviewed-by:${username} -author:${username}`),
   ])
 
   const userData = await userRes.json()
 
   return {
     globalMergedPRs,
+    globalTotalPRs,
+    globalReviewsGiven,
     followers: userData.followers ?? 0,
     createdAt: userData.created_at,
     publicRepos: userData.public_repos ?? 0,

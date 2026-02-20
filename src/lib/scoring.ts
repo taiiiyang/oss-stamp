@@ -1,4 +1,4 @@
-import type { GlobalContribution, RepoContribution } from '@/lib/github-rest'
+import type { GlobalContribution } from '@/lib/github-rest'
 
 export interface ContributorScore {
   overall: number
@@ -32,35 +32,31 @@ function logScale(value: number, cap: number): number {
 }
 
 export function calculateScore(
-  repoData: RepoContribution,
-  globalData: GlobalContribution | null | undefined,
+  globalData: GlobalContribution,
 ): ContributorScore {
-  const contribution = logScale(repoData.mergedPRs, 50)
+  const contribution = logScale(globalData.globalMergedPRs, 100)
 
   const mergeRate
-    = repoData.totalPRs > 0
-      ? Math.round((repoData.mergedPRs / repoData.totalPRs) * 100)
+    = globalData.globalTotalPRs > 0
+      ? Math.round((globalData.globalMergedPRs / globalData.globalTotalPRs) * 100)
       : 0
 
-  const review = logScale(repoData.reviewsGiven, 30)
+  const review = logScale(globalData.globalReviewsGiven, 100)
 
-  let tenure = 0
-  if (repoData.firstContributionAt) {
-    const firstDate = new Date(repoData.firstContributionAt)
-    const months
-      = (Date.now() - firstDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
-    tenure = Math.min(100, Math.round((months / 24) * 100))
-  }
+  const accountAgeYears
+    = (Date.now() - new Date(globalData.createdAt).getTime())
+      / (1000 * 60 * 60 * 24 * 365)
+  const tenure = Math.min(100, Math.round((accountAgeYears / 5) * 100))
 
-  const recency = globalData
-    ? Math.min(100, globalData.publicRepos + globalData.followers)
-    : 50
+  const recency
+    = logScale(globalData.publicRepos, 100) * 0.5
+      + logScale(globalData.followers, 100) * 0.5
 
   const overall = Math.round(
-    contribution * 0.4
+    contribution * 0.35
     + mergeRate * 0.15
     + review * 0.15
-    + tenure * 0.15
+    + tenure * 0.2
     + recency * 0.15,
   )
 
@@ -72,7 +68,7 @@ export function calculateScore(
       mergeRate,
       review,
       tenure,
-      recency,
+      recency: Math.round(recency),
     },
   }
 }
