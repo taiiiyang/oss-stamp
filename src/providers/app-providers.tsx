@@ -1,8 +1,11 @@
 import type { createStore } from 'jotai'
+import type { Config } from '@/types/config'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Provider } from 'jotai'
 import { queryClientAtom } from 'jotai-tanstack-query'
 import { useHydrateAtoms } from 'jotai/react/utils'
+import { configAtom } from '@/atoms/config'
+import { DEFAULT_CONFIG } from '@/types/config'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -15,22 +18,24 @@ const queryClient = new QueryClient({
   },
 })
 
-function HydrateAtoms({ children }: { children: React.ReactNode }) {
-  useHydrateAtoms([[queryClientAtom, queryClient]])
+function HydrateAtoms({ children, config }: { children: React.ReactNode, config: Config }) {
+  useHydrateAtoms([[queryClientAtom, queryClient], [configAtom, config]])
   return children
 }
 
 export function AppProviders({
   children,
   store,
+  config = DEFAULT_CONFIG,
 }: {
   children: React.ReactNode
   store?: ReturnType<typeof createStore>
+  config?: Config
 }) {
   return (
     <QueryClientProvider client={queryClient}>
       <Provider store={store}>
-        <HydrateAtoms>{children}</HydrateAtoms>
+        <HydrateAtoms config={config}>{children}</HydrateAtoms>
       </Provider>
     </QueryClientProvider>
   )

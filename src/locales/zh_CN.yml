@@ -35,3 +35,5 @@ rateLimitUnauth: 未认证：60 请求/小时
 optionsTitle: 设置
 optionsAuthSection: 身份认证
 optionsAuthDesc: 配置 GitHub 个人访问令牌，将 API 速率限制从每小时 60 次提升至 5,000 次。
+tokenBannerText: 配置令牌以提升速率限制（60 → 5,000 请求/小时）
+tokenBannerAction: 去配置

@@ -1,4 +1,4 @@
-import { githubTheme } from '@/lib/token-storage'
+import { githubTheme } from '@/lib/theme-storage'
 
 /**
  * Wait for a DOM element matching `selector` to appear.

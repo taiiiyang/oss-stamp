@@ -1,7 +1,11 @@
+import type { Config } from '@/types/config'
 import { createStore } from 'jotai'
 import ReactDOM from 'react-dom/client'
+import { CONFIG_STORAGE_KEY } from '@/atoms/config'
 import { AppProviders } from '@/providers/app-providers'
+import { DEFAULT_CONFIG } from '@/types/config'
 import { onNavigate, parsePRFromUrl, setupDarkMode, waitForElement } from '@/utils/github-dom'
+import { storageAdapter } from '@/utils/storage-adapter'
 import App from './app'
 
 type Ctx = Parameters<typeof createShadowRootUi>[0]
@@ -21,6 +25,7 @@ export async function setupStampCard(ctx: Ctx) {
       return
 
     const store = createStore()
+    const config = await storageAdapter.get<Config>(CONFIG_STORAGE_KEY, DEFAULT_CONFIG)
 
     currentUi = await createShadowRootUi(ctx, {
       name: 'oss-stamp-score-card',
@@ -33,7 +38,7 @@ export async function setupStampCard(ctx: Ctx) {
         container.append(wrapper)
         const root = ReactDOM.createRoot(wrapper)
         root.render(
-          <AppProviders store={store}>
+          <AppProviders store={store} config={config}>
             <App owner={pr.owner} repo={pr.repo} prNumber={pr.prNumber} />
           </AppProviders>,
         )
