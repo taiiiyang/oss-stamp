@@ -1,5 +1,3 @@
-import { getToken } from './token-storage'
-
 // —— Error classes ——
 
 export class GitHubApiError extends Error {
@@ -39,8 +37,7 @@ export interface GlobalContribution {
 
 // —— Internal helpers ——
 
-async function githubFetch(url: string): Promise<Response> {
-  const token = await getToken()
+async function githubFetch(url: string, token: string): Promise<Response> {
   const headers: Record<string, string> = { Accept: 'application/vnd.github+json' }
   if (token)
     headers.Authorization = `token ${token}`
@@ -54,9 +51,10 @@ async function githubFetch(url: string): Promise<Response> {
   return res
 }
 
-async function searchCount(query: string): Promise<number> {
+async function searchCount(query: string, token: string): Promise<number> {
   const res = await githubFetch(
     `https://api.github.com/search/issues?q=${encodeURIComponent(query)}&per_page=1`,
+    token,
   )
   const data = await res.json()
   return data.total_count ?? 0
@@ -64,9 +62,10 @@ async function searchCount(query: string): Promise<number> {
 
 // —— Public API ——
 
-export async function fetchPRAuthor(owner: string, repo: string, prNumber: number): Promise<string> {
+export async function fetchPRAuthor(owner: string, repo: string, prNumber: number, token: string): Promise<string> {
   const res = await githubFetch(
     `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/pulls/${prNumber}`,
+    token,
   )
   const data = await res.json()
   return data.user.login
@@ -76,17 +75,19 @@ export async function fetchRepoContribution(
   owner: string,
   repo: string,
   username: string,
+  token: string,
 ): Promise<RepoContribution> {
   const [mergedPRs, totalPRs, reviewsGiven] = await Promise.all([
-    searchCount(`repo:${owner}/${repo} author:${username} is:pr is:merged`),
-    searchCount(`repo:${owner}/${repo} author:${username} is:pr`),
-    searchCount(`repo:${owner}/${repo} is:pr reviewed-by:${username} -author:${username}`),
+    searchCount(`repo:${owner}/${repo} author:${username} is:pr is:merged`, token),
+    searchCount(`repo:${owner}/${repo} author:${username} is:pr`, token),
+    searchCount(`repo:${owner}/${repo} is:pr reviewed-by:${username} -author:${username}`, token),
   ])
 
   let firstContributionAt: string | null = null
   if (totalPRs > 0) {
     const res = await githubFetch(
       `https://api.github.com/search/issues?q=${encodeURIComponent(`repo:${owner}/${repo} author:${username} is:pr`)}&sort=created&order=asc&per_page=1`,
+      token,
     )
     const data = await res.json()
     firstContributionAt = data.items?.[0]?.created_at ?? null
@@ -97,12 +98,13 @@ export async function fetchRepoContribution(
 
 export async function fetchGlobalContribution(
   username: string,
+  token: string,
 ): Promise<GlobalContribution> {
   const [userRes, globalMergedPRs, globalTotalPRs, globalReviewsGiven] = await Promise.all([
-    githubFetch(`https://api.github.com/users/${encodeURIComponent(username)}`),
-    searchCount(`author:${username} is:pr is:merged`),
-    searchCount(`author:${username} is:pr`),
-    searchCount(`is:pr reviewed-by:${username} -author:${username}`),
+    githubFetch(`https://api.github.com/users/${encodeURIComponent(username)}`, token),
+    searchCount(`author:${username} is:pr is:merged`, token),
+    searchCount(`author:${username} is:pr`, token),
+    searchCount(`is:pr reviewed-by:${username} -author:${username}`, token),
   ])
 
   const userData = await userRes.json()
@@ -115,4 +117,11 @@ export async function fetchGlobalContribution(
     createdAt: userData.created_at,
     publicRepos: userData.public_repos ?? 0,
   }
+}
+
+export async function validateToken(token: string): Promise<boolean> {
+  const res = await fetch('https://api.github.com/user', {
+    headers: { Authorization: `token ${token}` },
+  })
+  return res.ok
 }

@@ -1,5 +1,5 @@
 import ReactDOM from 'react-dom/client'
-import { githubTheme } from '@/lib/token-storage'
+import { githubTheme } from '@/lib/theme-storage'
 import { App } from './app'
 import '@/assets/styles/theme.css'
 

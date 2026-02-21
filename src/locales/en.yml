@@ -35,3 +35,5 @@ rateLimitUnauth: 'Unauthenticated: 60 requests/hr'
 optionsTitle: Settings
 optionsAuthSection: Authentication
 optionsAuthDesc: Configure your GitHub Personal Access Token to increase the API rate limit from 60 to 5,000 requests per hour.
+tokenBannerText: Configure a token to increase rate limit (60 → 5,000 req/hr)
+tokenBannerAction: Configure

@@ -1,47 +1,57 @@
 import { i18n } from '#i18n'
-import { useCallback, useEffect, useState } from 'react'
-import { clearToken, getToken, setToken, validateToken } from '@/lib/token-storage'
+import { useQuery } from '@tanstack/react-query'
+import { useAtom, useSetAtom } from 'jotai'
+import { useCallback, useState } from 'react'
+import { configFieldsAtomMap, writeConfigAtom } from '@/atoms/config'
+import { validateToken } from '@/lib/github-rest'
 
-type TokenStatus = 'none' | 'valid' | 'invalid' | 'validating'
+type SaveStatus = 'idle' | 'validating' | 'invalid'
 
 export function App() {
+  const [potToken, setPotToken] = useAtom(configFieldsAtomMap.potToken)
+  const writeConfig = useSetAtom(writeConfigAtom)
   const [input, setInput] = useState('')
-  const [status, setStatus] = useState<TokenStatus>('none')
-  const [hasToken, setHasToken] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
 
-  useEffect(() => {
-    void getToken().then((token) => {
-      if (token) {
-        setHasToken(true)
-        setStatus('validating')
-        void validateToken(token).then(ok => setStatus(ok ? 'valid' : 'invalid'))
-      }
-    })
-  }, [])
+  const { data: isTokenValid, isLoading: isValidating } = useQuery({
+    queryKey: ['validate-token', potToken],
+    queryFn: () => validateToken(potToken),
+    enabled: !!potToken,
+  })
+
+  function getTokenStatus() {
+    if (saveStatus !== 'idle')
+      return saveStatus
+    if (!potToken)
+      return 'none'
+    if (isValidating)
+      return 'validating'
+    return isTokenValid ? 'valid' : 'invalid'
+  }
+
+  const tokenStatus = getTokenStatus()
 
   const handleSave = useCallback(async () => {
     const trimmed = input.trim()
     if (!trimmed)
       return
-    setStatus('validating')
+    setSaveStatus('validating')
     const ok = await validateToken(trimmed)
     if (ok) {
-      await setToken(trimmed)
-      setHasToken(true)
-      setStatus('valid')
+      writeConfig({ potToken: trimmed })
+      setSaveStatus('idle')
       setInput('')
     }
     else {
-      setStatus('invalid')
+      setSaveStatus('invalid')
     }
-  }, [input])
+  }, [input, writeConfig])
 
-  const handleClear = useCallback(async () => {
-    await clearToken()
-    setHasToken(false)
-    setStatus('none')
+  const handleClear = useCallback(() => {
+    setPotToken('')
+    setSaveStatus('idle')
     setInput('')
-  }, [])
+  }, [setPotToken])
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,17 +91,17 @@ export function App() {
               <button
                 type="button"
                 onClick={() => void handleSave()}
-                disabled={!input.trim() || status === 'validating'}
+                disabled={!input.trim() || tokenStatus === 'validating'}
                 className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
               >
                 {i18n.t('tokenSave')}
               </button>
             </div>
 
-            {hasToken && (
+            {!!potToken && (
               <button
                 type="button"
-                onClick={() => void handleClear()}
+                onClick={handleClear}
                 className="mt-2 text-sm text-destructive hover:underline"
               >
                 {i18n.t('tokenClear')}
@@ -99,22 +109,22 @@ export function App() {
             )}
 
             <div className="mt-3 text-sm">
-              {status === 'validating' && (
+              {tokenStatus === 'validating' && (
                 <span className="text-muted-foreground">{i18n.t('loading')}</span>
               )}
-              {status === 'valid' && (
+              {tokenStatus === 'valid' && (
                 <span className="text-success">{i18n.t('tokenValid')}</span>
               )}
-              {status === 'invalid' && (
+              {tokenStatus === 'invalid' && (
                 <span className="text-destructive">{i18n.t('tokenInvalid')}</span>
               )}
-              {status === 'none' && (
+              {tokenStatus === 'none' && (
                 <span className="text-muted-foreground">{i18n.t('tokenNone')}</span>
               )}
             </div>
 
             <p className="mt-1 text-xs text-muted-foreground">
-              {hasToken ? i18n.t('rateLimitAuth') : i18n.t('rateLimitUnauth')}
+              {potToken ? i18n.t('rateLimitAuth') : i18n.t('rateLimitUnauth')}
             </p>
 
             <div className="mt-4 rounded-lg bg-muted p-4">

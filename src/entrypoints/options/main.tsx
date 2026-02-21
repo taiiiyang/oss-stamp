@@ -1,5 +1,6 @@
 import ReactDOM from 'react-dom/client'
-import { githubTheme } from '@/lib/token-storage'
+import { githubTheme } from '@/lib/theme-storage'
+import { AppProviders } from '@/providers/app-providers'
 import { App } from './app'
 import '@/assets/styles/theme.css'
 
@@ -15,4 +16,8 @@ githubTheme.watch((theme) => {
   document.documentElement.classList.toggle('dark', theme === 'dark')
 })
 
-ReactDOM.createRoot(document.getElementById('root')!).render(<App />)
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <AppProviders>
+    <App />
+  </AppProviders>,
+)
