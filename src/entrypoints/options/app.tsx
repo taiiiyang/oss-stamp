@@ -1,8 +1,9 @@
 import { i18n } from '#i18n'
 import { useQuery } from '@tanstack/react-query'
 import { useAtom, useSetAtom } from 'jotai'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { configFieldsAtomMap, writeConfigAtom } from '@/atoms/config'
+import { Button } from '@/components/ui/button'
 import { validateToken } from '@/lib/github-rest'
 
 type SaveStatus = 'idle' | 'validating' | 'invalid'
@@ -10,8 +11,12 @@ type SaveStatus = 'idle' | 'validating' | 'invalid'
 export function App() {
   const [potToken, setPotToken] = useAtom(configFieldsAtomMap.potToken)
   const writeConfig = useSetAtom(writeConfigAtom)
-  const [input, setInput] = useState('')
+  const [input, setInput] = useState(potToken)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+
+  useEffect(() => {
+    setInput(potToken)
+  }, [potToken])
 
   const { data: isTokenValid, isLoading: isValidating } = useQuery({
     queryKey: ['validate-token', potToken],
@@ -40,7 +45,6 @@ export function App() {
     if (ok) {
       writeConfig({ potToken: trimmed })
       setSaveStatus('idle')
-      setInput('')
     }
     else {
       setSaveStatus('invalid')
@@ -60,9 +64,7 @@ export function App() {
           <h1 className="text-xl font-semibold text-foreground">
             {`${i18n.t('extName')} ${i18n.t('optionsTitle')}`}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {i18n.t('popupInfo')}
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{i18n.t('popupInfo')}</p>
         </div>
       </header>
 
@@ -71,9 +73,7 @@ export function App() {
           <h2 className="text-base font-semibold text-foreground">
             {i18n.t('optionsAuthSection')}
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {i18n.t('optionsAuthDesc')}
-          </p>
+          <p className="mt-1 text-sm text-muted-foreground">{i18n.t('optionsAuthDesc')}</p>
 
           <div className="mt-4">
             <label className="block text-sm font-medium text-foreground">
@@ -88,25 +88,20 @@ export function App() {
                 placeholder={i18n.t('tokenPlaceholder')}
                 className="flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
               />
-              <button
+              <Button
                 type="button"
-                onClick={() => void handleSave()}
+                size="sm"
+                onClick={handleSave}
                 disabled={!input.trim() || tokenStatus === 'validating'}
-                className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
               >
                 {i18n.t('tokenSave')}
-              </button>
+              </Button>
+              {!!potToken && (
+                <Button type="button" variant="outline" size="sm" className="border-destructive text-destructive hover:bg-destructive/10" onClick={handleClear}>
+                  {i18n.t('tokenClear')}
+                </Button>
+              )}
             </div>
-
-            {!!potToken && (
-              <button
-                type="button"
-                onClick={handleClear}
-                className="mt-2 text-sm text-destructive hover:underline"
-              >
-                {i18n.t('tokenClear')}
-              </button>
-            )}
 
             <div className="mt-3 text-sm">
               {tokenStatus === 'validating' && (
@@ -128,9 +123,7 @@ export function App() {
             </p>
 
             <div className="mt-4 rounded-lg bg-muted p-4">
-              <p className="text-sm font-medium text-foreground">
-                {i18n.t('tokenHowTo')}
-              </p>
+              <p className="text-sm font-medium text-foreground">{i18n.t('tokenHowTo')}</p>
               <ol className="mt-2 space-y-1 text-sm text-muted-foreground">
                 <li>{i18n.t('tokenStep1')}</li>
                 <li>{i18n.t('tokenStep2')}</li>
