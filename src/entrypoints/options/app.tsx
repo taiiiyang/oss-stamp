@@ -1,7 +1,7 @@
 import { i18n } from '#i18n'
 import { useQuery } from '@tanstack/react-query'
 import { useAtom, useSetAtom } from 'jotai'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { configFieldsAtomMap, writeConfigAtom } from '@/atoms/config'
 import { Button } from '@/components/ui/button'
 import { validateToken } from '@/lib/github-rest'
@@ -13,10 +13,6 @@ export function App() {
   const writeConfig = useSetAtom(writeConfigAtom)
   const [input, setInput] = useState(potToken)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
-
-  useEffect(() => {
-    setInput(potToken)
-  }, [potToken])
 
   const { data: isTokenValid, isLoading: isValidating } = useQuery({
     queryKey: ['validate-token', potToken],
