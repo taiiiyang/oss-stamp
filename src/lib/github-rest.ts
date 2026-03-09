@@ -35,6 +35,11 @@ export interface GlobalContribution {
   publicRepos: number
 }
 
+interface GraphQLResponse<T> {
+  data?: T
+  errors?: Array<{ message: string, type?: string }>
+}
+
 // —— Internal helpers ——
 
 async function githubFetch(url: string, token: string): Promise<Response> {
@@ -51,13 +56,35 @@ async function githubFetch(url: string, token: string): Promise<Response> {
   return res
 }
 
-async function searchCount(query: string, token: string): Promise<number> {
-  const res = await githubFetch(
-    `https://api.github.com/search/issues?q=${encodeURIComponent(query)}&per_page=1`,
-    token,
-  )
-  const data = await res.json()
-  return data.total_count ?? 0
+async function githubGraphQL<T>(query: string, variables: Record<string, string>, token: string): Promise<T> {
+  const res = await fetch('https://api.github.com/graphql', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `bearer ${token}`,
+    },
+    body: JSON.stringify({ query, variables }),
+  })
+  if (res.status === 403 || res.status === 429) {
+    const reset = Number(res.headers.get('x-ratelimit-reset')) * 1000
+    throw new RateLimitError(reset || Date.now() + 60_000)
+  }
+  if (!res.ok)
+    throw new GitHubApiError(res.statusText, res.status)
+  const json: GraphQLResponse<T> = await res.json()
+  if (json.errors?.length)
+    throw new GitHubApiError(json.errors[0].message, 422)
+  return json.data!
+}
+
+async function searchIssues(query: string, token: string, sort?: string, order?: string): Promise<{ total_count: number, items: Array<{ created_at?: string }> }> {
+  let url = `https://api.github.com/search/issues?q=${encodeURIComponent(query)}&per_page=1`
+  if (sort)
+    url += `&sort=${sort}`
+  if (order)
+    url += `&order=${order}`
+  const res = await githubFetch(url, token)
+  return res.json()
 }
 
 // —— Public API ——
@@ -71,48 +98,129 @@ export async function fetchPRAuthor(owner: string, repo: string, prNumber: numbe
   return data.user.login
 }
 
+// —— GraphQL queries ——
+
+const REPO_CONTRIBUTION_QUERY = `
+query RepoContribution($merged: String!, $total: String!, $reviews: String!) {
+  merged: search(query: $merged, type: ISSUE, first: 1) { issueCount }
+  total: search(query: $total, type: ISSUE, first: 1) {
+    issueCount
+    edges { node { ... on PullRequest { createdAt } } }
+  }
+  reviews: search(query: $reviews, type: ISSUE, first: 1) { issueCount }
+}
+`
+
+interface RepoContributionGQL {
+  merged: { issueCount: number }
+  total: { issueCount: number, edges: Array<{ node: { createdAt?: string } }> }
+  reviews: { issueCount: number }
+}
+
+const GLOBAL_CONTRIBUTION_QUERY = `
+query GlobalContribution($username: String!, $merged: String!, $total: String!, $reviews: String!) {
+  user(login: $username) {
+    followers { totalCount }
+    createdAt
+    repositories(privacy: PUBLIC) { totalCount }
+  }
+  merged: search(query: $merged, type: ISSUE, first: 1) { issueCount }
+  total: search(query: $total, type: ISSUE, first: 1) { issueCount }
+  reviews: search(query: $reviews, type: ISSUE, first: 1) { issueCount }
+}
+`
+
+interface GlobalContributionGQL {
+  user: {
+    followers: { totalCount: number }
+    createdAt: string
+    repositories: { totalCount: number }
+  }
+  merged: { issueCount: number }
+  total: { issueCount: number }
+  reviews: { issueCount: number }
+}
+
+// —— Fetch functions ——
+
 export async function fetchRepoContribution(
   owner: string,
   repo: string,
   username: string,
   token: string,
 ): Promise<RepoContribution> {
-  const [mergedPRs, totalPRs, reviewsGiven] = await Promise.all([
-    searchCount(`repo:${owner}/${repo} author:${username} is:pr is:merged`, token),
-    searchCount(`repo:${owner}/${repo} author:${username} is:pr`, token),
-    searchCount(`repo:${owner}/${repo} is:pr reviewed-by:${username} -author:${username}`, token),
-  ])
+  // With token: use GraphQL (1 request instead of 3-4 REST Search requests)
+  if (token) {
+    const repoSlug = `${owner}/${repo}`
+    const data = await githubGraphQL<RepoContributionGQL>(REPO_CONTRIBUTION_QUERY, {
+      merged: `repo:${repoSlug} author:${username} is:pr is:merged`,
+      total: `repo:${repoSlug} author:${username} is:pr sort:created-asc`,
+      reviews: `repo:${repoSlug} is:pr reviewed-by:${username} -author:${username}`,
+    }, token)
 
-  let firstContributionAt: string | null = null
-  if (totalPRs > 0) {
-    const res = await githubFetch(
-      `https://api.github.com/search/issues?q=${encodeURIComponent(`repo:${owner}/${repo} author:${username} is:pr`)}&sort=created&order=asc&per_page=1`,
-      token,
-    )
-    const data = await res.json()
-    firstContributionAt = data.items?.[0]?.created_at ?? null
+    const firstContributionAt = data.total.edges[0]?.node?.createdAt ?? null
+
+    return {
+      mergedPRs: data.merged.issueCount,
+      totalPRs: data.total.issueCount,
+      reviewsGiven: data.reviews.issueCount,
+      firstContributionAt,
+    }
   }
 
-  return { mergedPRs, totalPRs, reviewsGiven, firstContributionAt }
+  // Without token: REST fallback (merge totalPRs + firstContributionAt into 1 call)
+  const repoSlug = `${owner}/${repo}`
+  const [mergedData, totalData, reviewsData] = await Promise.all([
+    searchIssues(`repo:${repoSlug} author:${username} is:pr is:merged`, token),
+    searchIssues(`repo:${repoSlug} author:${username} is:pr`, token, 'created', 'asc'),
+    searchIssues(`repo:${repoSlug} is:pr reviewed-by:${username} -author:${username}`, token),
+  ])
+
+  return {
+    mergedPRs: mergedData.total_count ?? 0,
+    totalPRs: totalData.total_count ?? 0,
+    reviewsGiven: reviewsData.total_count ?? 0,
+    firstContributionAt: totalData.items?.[0]?.created_at ?? null,
+  }
 }
 
 export async function fetchGlobalContribution(
   username: string,
   token: string,
 ): Promise<GlobalContribution> {
-  const [userRes, globalMergedPRs, globalTotalPRs, globalReviewsGiven] = await Promise.all([
+  // With token: use GraphQL (1 request instead of 3 REST Search + 1 REST user)
+  if (token) {
+    const data = await githubGraphQL<GlobalContributionGQL>(GLOBAL_CONTRIBUTION_QUERY, {
+      username,
+      merged: `author:${username} is:pr is:merged`,
+      total: `author:${username} is:pr`,
+      reviews: `is:pr reviewed-by:${username} -author:${username}`,
+    }, token)
+
+    return {
+      globalMergedPRs: data.merged.issueCount,
+      globalTotalPRs: data.total.issueCount,
+      globalReviewsGiven: data.reviews.issueCount,
+      followers: data.user.followers.totalCount,
+      createdAt: data.user.createdAt,
+      publicRepos: data.user.repositories.totalCount,
+    }
+  }
+
+  // Without token: REST fallback
+  const [userRes, mergedData, totalData, reviewsData] = await Promise.all([
     githubFetch(`https://api.github.com/users/${encodeURIComponent(username)}`, token),
-    searchCount(`author:${username} is:pr is:merged`, token),
-    searchCount(`author:${username} is:pr`, token),
-    searchCount(`is:pr reviewed-by:${username} -author:${username}`, token),
+    searchIssues(`author:${username} is:pr is:merged`, token),
+    searchIssues(`author:${username} is:pr`, token),
+    searchIssues(`is:pr reviewed-by:${username} -author:${username}`, token),
   ])
 
   const userData = await userRes.json()
 
   return {
-    globalMergedPRs,
-    globalTotalPRs,
-    globalReviewsGiven,
+    globalMergedPRs: mergedData.total_count ?? 0,
+    globalTotalPRs: totalData.total_count ?? 0,
+    globalReviewsGiven: reviewsData.total_count ?? 0,
     followers: userData.followers ?? 0,
     createdAt: userData.created_at,
     publicRepos: userData.public_repos ?? 0,
