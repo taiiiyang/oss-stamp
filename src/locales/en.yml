@@ -37,3 +37,12 @@ optionsAuthSection: Authentication
 optionsAuthDesc: Configure your GitHub Personal Access Token to increase the API rate limit from 60 to 5,000 requests per hour.
 tokenBannerText: Configure a token to increase rate limit (60 → 5,000 req/hr)
 tokenBannerAction: Configure
+repoTrustScore: REPO TRUST SCORE
+profileScore: PROFILE SCORE
+following: Following
+contributions: Contributions (yr)
+organizations: Organizations
+languages: Languages
+totalStars: Total Stars
+totalForks: Total Forks
+topRepoStars: Top Repo Stars

@@ -20,6 +20,7 @@ function MetricsSkeleton() {
 export function OverallMetrics() {
   const [{ data, isPending, isError, error, refetch }]
     = useAtom(globalContributorAtom)
+
   if (isPending)
     return <MetricsSkeleton />
 
@@ -53,12 +54,12 @@ export function OverallMetrics() {
         label={i18n.t('globalPrs')}
         value={`${data.globalMergedPRs} merged`}
       />
-      <MetricRow label={i18n.t('commitsYear')} value={data.publicRepos} />
+      <MetricRow label={i18n.t('followers')} value={data.followers} />
       <MetricRow
         label={i18n.t('accountAge')}
         value={formatAccountAge(data.createdAt)}
       />
-      <MetricRow label={i18n.t('followers')} value={data.followers} />
+      <MetricRow label={i18n.t('contributions')} value={data.totalContributions} />
     </dl>
   )
 }

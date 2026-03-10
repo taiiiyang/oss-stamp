@@ -15,8 +15,9 @@ A browser extension that shows contributor score cards in pull request sidebars.
 [![License](https://img.shields.io/github/license/taiiiyang/oss-stamp)](./LICENSE)
 [![Last Commit](https://img.shields.io/github/last-commit/taiiiyang/oss-stamp)](https://github.com/taiiiyang/oss-stamp/commits/main)
 
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/dhhibeifipigpbkihogkolbhkcecjgfp)](https://chromewebstore.google.com/detail/oss-stamp/dhhibeifipigpbkihogkolbhkcecjgfp)
+
 <!-- TODO: uncomment when published -->
-<!-- [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/EXTENSION_ID)](https://chrome.google.com/webstore/detail/EXTENSION_ID) -->
 <!-- [![Firefox Add-ons](https://img.shields.io/amo/v/oss-stamp)](https://addons.mozilla.org/firefox/addon/oss-stamp) -->
 
 </div>
@@ -34,9 +35,9 @@ A browser extension that shows contributor score cards in pull request sidebars.
 
 See a contributor's tier (S/A/B/C/D) and overall score at a glance, right in the GitHub PR sidebar.
 
-### Multi-dimensional Analysis
+### Dual Scoring System
 
-Evaluates five dimensions: contribution count, merge rate, code reviews, tenure, and community presence.
+Two independent scores — **Repo Trust Score** (context-specific) and **Profile Score** (global profile) — each rated 0–100 across four dimensions.
 
 ### Dark Mode
 
@@ -48,19 +49,35 @@ Supports English and 简体中文.
 
 ## How Scoring Works
 
-Each contributor is scored across five dimensions, normalized to 0–100:
+OSS Stamp computes two independent scores, each 0–100 with four dimensions.
 
-| Dimension     | What it measures                 |
-| ------------- | -------------------------------- |
-| Contributions | Number of merged pull requests   |
-| Merge Rate    | Ratio of merged PRs to total PRs |
-| Reviews       | Number of code reviews given     |
-| Tenure        | Time since first contribution    |
-| Presence      | Public repos and followers       |
+### Repo Trust Score
 
-Contributions carry the most weight; the other four dimensions contribute equally.
+Measures the contributor's relationship with the **current repository**.
+
+> **Special case:** The repository owner always receives **S / 100**.
+
+| Dimension          | Max | Factors                                                                               |
+| ------------------ | --- | ------------------------------------------------------------------------------------- |
+| Repo Familiarity   | 35  | Merged PRs (0–12), reviews given (0–8), active duration (0–10), contributor flag (+5) |
+| Community Standing | 25  | Account age (0–5), followers (0–10), org membership (+10)                             |
+| OSS Influence      | 20  | Top repo stars (0–15), total stars (0–5)                                              |
+| PR Track Record    | 20  | Merge rate bands: <50% → 5, 50–74% → 10, 75–89% → 15, ≥90% → 20 (no PRs → 5)          |
+
+### Profile Score
+
+Measures the contributor's **global GitHub profile**, independent of any specific repo.
+
+| Dimension          | Max | Factors                                                                                                |
+| ------------------ | --- | ------------------------------------------------------------------------------------------------------ |
+| Community Presence | 25  | Account age (0–5), followers via log scale (0–12), follower/following ratio (0–4), has bio (+4)        |
+| OSS Impact         | 25  | Top repo stars via log scale (0–10), total stars via log scale (0–10), total forks via log scale (0–5) |
+| Activity           | 30  | Yearly contributions via log scale (0–18), public repos via log scale (0–12)                           |
+| Ecosystem          | 20  | Org memberships (0–12), language diversity (0–8)                                                       |
 
 ### Tiers
+
+Both scores share the same tier thresholds:
 
 | Tier  | Score  |
 | ----- | ------ |
@@ -70,11 +87,15 @@ Contributions carry the most weight; the other four dimensions contribute equall
 | **C** | 30–49  |
 | **D** | 0–29   |
 
+### Log Scale
+
+Several Profile Score factors use a logarithmic scale (`logScale(value, ref, max)`) to prevent extreme values from dominating. The `ref` parameter is the reference value that maps to ~70% of the maximum points. For example, `logScale(followers, 200, 12)` means 200 followers ≈ 8.4 points out of 12.
+
 ## Install
 
 ### From Store
 
-> Coming soon — [star this repo](https://github.com/taiiiyang/oss-stamp) to get notified.
+- **Chrome**: [Install from Chrome Web Store](https://chromewebstore.google.com/detail/oss-stamp/dhhibeifipigpbkihogkolbhkcecjgfp)
 
 ### From Source
 

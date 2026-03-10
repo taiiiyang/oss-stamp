@@ -1,6 +1,6 @@
 import { i18n } from '#i18n'
 import { useAtomValue } from 'jotai'
-import { contributorScoreAtom } from '@/atoms/contributor-score'
+import { activeTabAtom, profileScoreAtom, repoScoreAtom } from '@/atoms/contributor-score'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
 
@@ -27,7 +27,12 @@ function HeaderSkeleton() {
 }
 
 export function ScoreHeader() {
-  const score = useAtomValue(contributorScoreAtom)
+  const tab = useAtomValue(activeTabAtom)
+  const repoScore = useAtomValue(repoScoreAtom)
+  const profileScore = useAtomValue(profileScoreAtom)
+
+  const score = tab === 'repo' ? repoScore : profileScore
+  const label = tab === 'repo' ? i18n.t('repoTrustScore') : i18n.t('profileScore')
 
   if (!score)
     return <HeaderSkeleton />
@@ -36,7 +41,7 @@ export function ScoreHeader() {
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold tracking-wider text-muted-foreground">
-          {i18n.t('contributorScore')}
+          {label}
         </span>
         <span
           className={cn(
@@ -51,9 +56,9 @@ export function ScoreHeader() {
       <div className="flex items-baseline gap-2">
         <span
           className="text-3xl font-bold tabular-nums"
-          aria-label={`Score: ${score.overall} out of 100`}
+          aria-label={`Score: ${score.total} out of 100`}
         >
-          {score.overall}
+          {score.total}
         </span>
         <span className="text-sm text-muted-foreground">
           {i18n.t('points')}
