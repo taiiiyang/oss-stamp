@@ -15,8 +15,9 @@
 [![License](https://img.shields.io/github/license/taiiiyang/oss-stamp)](./LICENSE)
 [![Last Commit](https://img.shields.io/github/last-commit/taiiiyang/oss-stamp)](https://github.com/taiiiyang/oss-stamp/commits/main)
 
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/dhhibeifipigpbkihogkolbhkcecjgfp)](https://chromewebstore.google.com/detail/oss-stamp/dhhibeifipigpbkihogkolbhkcecjgfp)
+
 <!-- TODO: uncomment when published -->
-<!-- [![Chrome Web Store](https://img.shields.io/chrome-web-store/v/EXTENSION_ID)](https://chrome.google.com/webstore/detail/EXTENSION_ID) -->
 <!-- [![Firefox Add-ons](https://img.shields.io/amo/v/oss-stamp)](https://addons.mozilla.org/firefox/addon/oss-stamp) -->
 
 </div>
@@ -34,9 +35,9 @@
 
 在 GitHub PR 侧边栏直接查看贡献者的等级（S/A/B/C/D）和综合评分。
 
-### 多维度分析
+### 双评分体系
 
-从五个维度进行评估：贡献数量、合并率、代码审查、参与时长和社区影响力。
+两套独立评分 — **Repo Trust Score**（基于当前仓库）和 **Profile Score**（基于全局画像）— 均为 0–100 分，各含四个维度。
 
 ### 深色模式
 
@@ -48,19 +49,35 @@
 
 ## 评分机制
 
-每位贡献者从五个维度进行评分，每项归一化至 0–100：
+OSS Stamp 计算两套独立评分，均为 0–100 分，各含四个维度。
 
-| 维度     | 衡量内容                   |
-| -------- | -------------------------- |
-| 贡献量   | 已合并的 Pull Request 数量 |
-| 合并率   | 已合并 PR 占总 PR 的比例   |
-| 代码审查 | 给出的代码审查次数         |
-| 参与时长 | 首次贡献距今的时间         |
-| 活跃度   | 公开仓库数和关注者数       |
+### Repo Trust Score（仓库信任分）
 
-贡献量占最大权重，其余四个维度权重相同。
+衡量贡献者与**当前仓库**的关系。
+
+> **特殊情况：** 仓库 Owner 直接获得 **S / 100 分**。
+
+| 维度               | 满分 | 评分因子                                                               |
+| ------------------ | ---- | ---------------------------------------------------------------------- |
+| Repo Familiarity   | 35   | 已合并 PR 数 (0–12)、审查次数 (0–8)、活跃时长 (0–10)、贡献者标记 (+5)  |
+| Community Standing | 25   | 账号年龄 (0–5)、关注者数 (0–10)、组织成员 (+10)                        |
+| OSS Influence      | 20   | 最高星标仓库 (0–15)、总星标数 (0–5)                                    |
+| PR Track Record    | 20   | 合并率分段：<50% → 5, 50–74% → 10, 75–89% → 15, ≥90% → 20（无 PR → 5） |
+
+### Profile Score（画像评分）
+
+衡量贡献者的**全局 GitHub 画像**，与特定仓库无关。
+
+| 维度               | 满分 | 评分因子                                                               |
+| ------------------ | ---- | ---------------------------------------------------------------------- |
+| Community Presence | 25   | 账号年龄 (0–5)、关注者数/对数 (0–12)、关注者/关注比 (0–4)、有 Bio (+4) |
+| OSS Impact         | 25   | 最高星标仓库/对数 (0–10)、总星标数/对数 (0–10)、总 Fork 数/对数 (0–5)  |
+| Activity           | 30   | 年度贡献量/对数 (0–18)、公开仓库数/对数 (0–12)                         |
+| Ecosystem          | 20   | 组织成员数 (0–12)、语言多样性 (0–8)                                    |
 
 ### 等级
+
+两套评分共享相同的等级阈值：
 
 | 等级  | 分数   |
 | ----- | ------ |
@@ -70,11 +87,15 @@
 | **C** | 30–49  |
 | **D** | 0–29   |
 
+### 对数缩放
+
+Profile Score 中多个因子使用对数缩放函数（`logScale(value, ref, max)`），防止极端值主导评分。`ref` 参数为映射到满分 ~70% 的参考值。例如 `logScale(followers, 200, 12)` 表示 200 个关注者 ≈ 8.4 分（满分 12）。
+
 ## 安装
 
 ### 从商店安装
 
-> 即将上线 — [Star 本仓库](https://github.com/taiiiyang/oss-stamp)以获取通知。
+- **Chrome**：[从 Chrome Web Store 安装](https://chromewebstore.google.com/detail/oss-stamp/dhhibeifipigpbkihogkolbhkcecjgfp)
 
 ### 从源码构建
 

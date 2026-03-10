@@ -20,6 +20,7 @@ function MetricsSkeleton() {
 export function RepoMetrics() {
   const [{ data, isPending, isError, error, refetch }]
     = useAtom(repoContributorAtom)
+
   if (isPending)
     return <MetricsSkeleton />
 

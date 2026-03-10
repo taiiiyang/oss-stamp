@@ -24,6 +24,7 @@ export interface RepoContribution {
   totalPRs: number
   reviewsGiven: number
   firstContributionAt: string | null
+  isOrgMember: boolean
 }
 
 export interface GlobalContribution {
@@ -31,8 +32,15 @@ export interface GlobalContribution {
   globalTotalPRs: number
   globalReviewsGiven: number
   followers: number
+  following: number
   createdAt: string
   publicRepos: number
+  hasBio: boolean
+  topRepoStars: number[]
+  totalForks: number
+  totalContributions: number
+  orgCount: number
+  languageCount: number
 }
 
 interface GraphQLResponse<T> {
@@ -87,6 +95,22 @@ async function searchIssues(query: string, token: string, sort?: string, order?:
   return res.json()
 }
 
+async function checkOrgMembership(owner: string, username: string, token: string): Promise<boolean> {
+  try {
+    const headers: Record<string, string> = { Accept: 'application/vnd.github+json' }
+    if (token)
+      headers.Authorization = `token ${token}`
+    const res = await fetch(
+      `https://api.github.com/orgs/${encodeURIComponent(owner)}/public_members/${encodeURIComponent(username)}`,
+      { headers },
+    )
+    return res.status === 204
+  }
+  catch {
+    return false
+  }
+}
+
 // —— Public API ——
 
 export async function fetchPRAuthor(owner: string, repo: string, prNumber: number, token: string): Promise<string> {
@@ -121,8 +145,21 @@ const GLOBAL_CONTRIBUTION_QUERY = `
 query GlobalContribution($username: String!, $merged: String!, $total: String!, $reviews: String!) {
   user(login: $username) {
     followers { totalCount }
+    following { totalCount }
     createdAt
-    repositories(privacy: PUBLIC) { totalCount }
+    bio
+    repositories(privacy: PUBLIC, first: 10, orderBy: {field: STARGAZERS, direction: DESC}) {
+      totalCount
+      nodes {
+        stargazerCount
+        forkCount
+        languages(first: 5) { nodes { name } }
+      }
+    }
+    organizations { totalCount }
+    contributionsCollection {
+      contributionCalendar { totalContributions }
+    }
   }
   merged: search(query: $merged, type: ISSUE, first: 1) { issueCount }
   total: search(query: $total, type: ISSUE, first: 1) { issueCount }
@@ -133,8 +170,21 @@ query GlobalContribution($username: String!, $merged: String!, $total: String!, 
 interface GlobalContributionGQL {
   user: {
     followers: { totalCount: number }
+    following: { totalCount: number }
     createdAt: string
-    repositories: { totalCount: number }
+    bio: string | null
+    repositories: {
+      totalCount: number
+      nodes: Array<{
+        stargazerCount: number
+        forkCount: number
+        languages: { nodes: Array<{ name: string }> }
+      }>
+    }
+    organizations: { totalCount: number }
+    contributionsCollection: {
+      contributionCalendar: { totalContributions: number }
+    }
   }
   merged: { issueCount: number }
   total: { issueCount: number }
@@ -152,11 +202,14 @@ export async function fetchRepoContribution(
   // With token: use GraphQL (1 request instead of 3-4 REST Search requests)
   if (token) {
     const repoSlug = `${owner}/${repo}`
-    const data = await githubGraphQL<RepoContributionGQL>(REPO_CONTRIBUTION_QUERY, {
-      merged: `repo:${repoSlug} author:${username} is:pr is:merged`,
-      total: `repo:${repoSlug} author:${username} is:pr sort:created-asc`,
-      reviews: `repo:${repoSlug} is:pr reviewed-by:${username} -author:${username}`,
-    }, token)
+    const [data, isOrgMember] = await Promise.all([
+      githubGraphQL<RepoContributionGQL>(REPO_CONTRIBUTION_QUERY, {
+        merged: `repo:${repoSlug} author:${username} is:pr is:merged`,
+        total: `repo:${repoSlug} author:${username} is:pr sort:created-asc`,
+        reviews: `repo:${repoSlug} is:pr reviewed-by:${username} -author:${username}`,
+      }, token),
+      checkOrgMembership(owner, username, token),
+    ])
 
     const firstContributionAt = data.total.edges[0]?.node?.createdAt ?? null
 
@@ -165,15 +218,17 @@ export async function fetchRepoContribution(
       totalPRs: data.total.issueCount,
       reviewsGiven: data.reviews.issueCount,
       firstContributionAt,
+      isOrgMember,
     }
   }
 
   // Without token: REST fallback (merge totalPRs + firstContributionAt into 1 call)
   const repoSlug = `${owner}/${repo}`
-  const [mergedData, totalData, reviewsData] = await Promise.all([
+  const [mergedData, totalData, reviewsData, isOrgMember] = await Promise.all([
     searchIssues(`repo:${repoSlug} author:${username} is:pr is:merged`, token),
     searchIssues(`repo:${repoSlug} author:${username} is:pr`, token, 'created', 'asc'),
     searchIssues(`repo:${repoSlug} is:pr reviewed-by:${username} -author:${username}`, token),
+    checkOrgMembership(owner, username, token),
   ])
 
   return {
@@ -181,6 +236,7 @@ export async function fetchRepoContribution(
     totalPRs: totalData.total_count ?? 0,
     reviewsGiven: reviewsData.total_count ?? 0,
     firstContributionAt: totalData.items?.[0]?.created_at ?? null,
+    isOrgMember,
   }
 }
 
@@ -197,33 +253,58 @@ export async function fetchGlobalContribution(
       reviews: `is:pr reviewed-by:${username} -author:${username}`,
     }, token)
 
+    const repos = data.user.repositories.nodes
+    const topRepoStars = repos.map(r => r.stargazerCount)
+    const totalForks = repos.reduce((sum, r) => sum + r.forkCount, 0)
+    const languages = new Set(repos.flatMap(r => r.languages.nodes.map(l => l.name)))
+
     return {
       globalMergedPRs: data.merged.issueCount,
       globalTotalPRs: data.total.issueCount,
       globalReviewsGiven: data.reviews.issueCount,
       followers: data.user.followers.totalCount,
+      following: data.user.following.totalCount,
       createdAt: data.user.createdAt,
       publicRepos: data.user.repositories.totalCount,
+      hasBio: !!data.user.bio,
+      topRepoStars,
+      totalForks,
+      totalContributions: data.user.contributionsCollection.contributionCalendar.totalContributions,
+      orgCount: data.user.organizations.totalCount,
+      languageCount: languages.size,
     }
   }
 
   // Without token: REST fallback
-  const [userRes, mergedData, totalData, reviewsData] = await Promise.all([
+  const [userRes, reposRes, mergedData, totalData, reviewsData] = await Promise.all([
     githubFetch(`https://api.github.com/users/${encodeURIComponent(username)}`, token),
+    githubFetch(`https://api.github.com/users/${encodeURIComponent(username)}/repos?sort=stars&per_page=10`, token),
     searchIssues(`author:${username} is:pr is:merged`, token),
     searchIssues(`author:${username} is:pr`, token),
     searchIssues(`is:pr reviewed-by:${username} -author:${username}`, token),
   ])
 
   const userData = await userRes.json()
+  const reposData: Array<{ stargazers_count: number, forks_count: number, language: string | null }> = await reposRes.json()
+
+  const topRepoStars = reposData.map(r => r.stargazers_count)
+  const totalForks = reposData.reduce((sum, r) => sum + r.forks_count, 0)
+  const languages = new Set(reposData.map(r => r.language).filter(Boolean))
 
   return {
     globalMergedPRs: mergedData.total_count ?? 0,
     globalTotalPRs: totalData.total_count ?? 0,
     globalReviewsGiven: reviewsData.total_count ?? 0,
     followers: userData.followers ?? 0,
+    following: userData.following ?? 0,
     createdAt: userData.created_at,
     publicRepos: userData.public_repos ?? 0,
+    hasBio: !!userData.bio,
+    topRepoStars,
+    totalForks,
+    totalContributions: 0,
+    orgCount: 0,
+    languageCount: languages.size,
   }
 }
 
