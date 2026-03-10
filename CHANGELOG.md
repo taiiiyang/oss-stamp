@@ -1,5 +1,11 @@
 # oss-stamp
 
+## 0.2.0
+
+### Minor Changes
+
+- 1e4b6bc: perf: migrate GitHub Search API to GraphQL to reduce rate limit issues
+
 ## 0.1.1
 
 ### Patch Changes
