@@ -23,6 +23,8 @@ tokenLabel: GitHub Personal Access Token
 tokenPlaceholder: ghp_xxxxxxxxxxxx
 tokenSave: Save
 tokenClear: Clear
+showToken: Show token
+hideToken: Hide token
 tokenValid: Token is valid
 tokenInvalid: Token is invalid
 tokenNone: No token configured
@@ -37,6 +39,10 @@ optionsTitle: Settings
 optionsAuthSection: Authentication
 optionsAuthDesc: Configure your GitHub Personal Access Token to increase the API rate limit from 60 to 5,000 requests per hour.
 tokenBannerText: Configure a token to increase rate limit (60 → 5,000 req/hr)
+tokenBannerMissingTitle: Configure a GitHub token to load contributor metrics
+tokenBannerMissingText: No token is configured. Add one in settings to unlock the card and raise the rate limit from 60 to 5,000 requests per hour.
+tokenBannerInvalidTitle: Update your GitHub token
+tokenBannerInvalidText: The saved token is invalid or expired. Open settings and replace it to load contributor metrics again.
 tokenBannerAction: Configure
 repoTrustScore: REPO TRUST SCORE
 profileScore: PROFILE SCORE
