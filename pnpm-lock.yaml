@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@tabler/icons-react':
+        specifier: ^3.41.0
+        version: 3.41.0(react@19.2.4)
       '@tanstack/react-query':
         specifier: ^5.90.20
         version: 5.90.21(react@19.2.4)
@@ -1622,6 +1625,14 @@ packages:
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: '>=9.0.0'
+
+  '@tabler/icons-react@3.41.0':
+    resolution: {integrity: sha512-8XKc3wZKf1icxqwIPSOO61M+dtf8yJPwAE/rtFAVzc5Ros+OjCqowfcoI5IpKK09RSo8s0hHrWvydGgnXqYILg==}
+    peerDependencies:
+      react: '>= 16'
+
+  '@tabler/icons@3.41.0':
+    resolution: {integrity: sha512-arlig0nkaC9UGqTZuT1MMZepX29t3Ysx5HSy2UvmR+CZrhlNxZrCM6Z4qYBoaIO+2ICZykttjBCSpf+p/t0H3w==}
 
   '@tailwindcss/node@4.1.18':
     resolution: {integrity: sha512-DoR7U1P7iYhw16qJ49fgXUlry1t4CpXeErJHnQ44JgTSKMaZUdf17cfn5mHchfJ4KRBZRFA/Coo+MUF5+gOaCQ==}
@@ -6293,6 +6304,13 @@ snapshots:
       espree: 10.4.0
       estraverse: 5.3.0
       picomatch: 4.0.3
+
+  '@tabler/icons-react@3.41.0(react@19.2.4)':
+    dependencies:
+      '@tabler/icons': 3.41.0
+      react: 19.2.4
+
+  '@tabler/icons@3.41.0': {}
 
   '@tailwindcss/node@4.1.18':
     dependencies:
