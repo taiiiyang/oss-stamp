@@ -1,5 +1,15 @@
 # oss-stamp
 
+## 0.3.0
+
+### Minor Changes
+
+- e939c0f: feat(popup): add settings shortcut and codex create-pr skill
+
+### Patch Changes
+
+- dd83c78: fix(auth): improve token setup and loading states
+
 ## 0.2.0
 
 ### Minor Changes
