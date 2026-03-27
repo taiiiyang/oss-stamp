@@ -1,18 +1,22 @@
 import { i18n } from '#i18n'
 import { useQuery } from '@tanstack/react-query'
 import { useAtom, useSetAtom } from 'jotai'
+import { Eye, EyeOff } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import { configFieldsAtomMap, writeConfigAtom } from '@/atoms/config'
 import { Button } from '@/components/ui/button'
 import { validateToken } from '@/lib/github-rest'
 
 type SaveStatus = 'idle' | 'validating' | 'invalid'
+type TokenStatus = SaveStatus | 'none' | 'valid'
 
 export function App() {
   const [potToken, setPotToken] = useAtom(configFieldsAtomMap.potToken)
   const writeConfig = useSetAtom(writeConfigAtom)
-  const [input, setInput] = useState(potToken)
+  const [draftToken, setDraftToken] = useState<string | null>(null)
+  const [isTokenVisible, setIsTokenVisible] = useState(false)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  const input = draftToken ?? potToken
 
   const { data: isTokenValid, isLoading: isValidating } = useQuery({
     queryKey: ['validate-token', potToken],
@@ -20,9 +24,7 @@ export function App() {
     enabled: !!potToken,
   })
 
-  function getTokenStatus() {
-    if (saveStatus !== 'idle')
-      return saveStatus
+  function getPersistedTokenStatus(): TokenStatus {
     if (!potToken)
       return 'none'
     if (isValidating)
@@ -30,6 +32,13 @@ export function App() {
     return isTokenValid ? 'valid' : 'invalid'
   }
 
+  function getTokenStatus() {
+    if (saveStatus !== 'idle')
+      return saveStatus
+    return getPersistedTokenStatus()
+  }
+
+  const persistedTokenStatus = getPersistedTokenStatus()
   const tokenStatus = getTokenStatus()
 
   const handleSave = useCallback(async () => {
@@ -40,6 +49,7 @@ export function App() {
     const ok = await validateToken(trimmed)
     if (ok) {
       writeConfig({ potToken: trimmed })
+      setDraftToken(trimmed)
       setSaveStatus('idle')
     }
     else {
@@ -50,7 +60,8 @@ export function App() {
   const handleClear = useCallback(() => {
     setPotToken('')
     setSaveStatus('idle')
-    setInput('')
+    setDraftToken(null)
+    setIsTokenVisible(false)
   }, [setPotToken])
 
   return (
@@ -76,27 +87,47 @@ export function App() {
               {i18n.t('tokenLabel')}
             </label>
 
-            <div className="mt-2 flex gap-2">
-              <input
-                type="password"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                placeholder={i18n.t('tokenPlaceholder')}
-                className="flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-              />
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleSave}
-                disabled={!input.trim() || tokenStatus === 'validating'}
-              >
-                {i18n.t('tokenSave')}
-              </Button>
-              {!!potToken && (
-                <Button type="button" variant="outline" size="sm" className="border-destructive text-destructive hover:bg-destructive/10" onClick={handleClear}>
-                  {i18n.t('tokenClear')}
+            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+              <div className="relative flex-1">
+                <input
+                  type={isTokenVisible ? 'text' : 'password'}
+                  value={input}
+                  onChange={(e) => {
+                    setDraftToken(e.target.value)
+                    if (saveStatus !== 'idle')
+                      setSaveStatus('idle')
+                  }}
+                  placeholder={i18n.t('tokenPlaceholder')}
+                  className="w-full rounded-md border border-input bg-background px-3 py-1.5 pr-11 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={isTokenVisible ? i18n.t('hideToken') : i18n.t('showToken')}
+                  aria-pressed={isTokenVisible}
+                  onClick={() => setIsTokenVisible(visible => !visible)}
+                >
+                  {isTokenVisible ? <EyeOff /> : <Eye />}
                 </Button>
-              )}
+              </div>
+
+              <div className="flex gap-2 sm:shrink-0">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={!input.trim() || tokenStatus === 'validating'}
+                >
+                  {i18n.t('tokenSave')}
+                </Button>
+                {!!potToken && (
+                  <Button type="button" variant="outline" size="sm" className="border-destructive text-destructive hover:bg-destructive/10" onClick={handleClear}>
+                    {i18n.t('tokenClear')}
+                  </Button>
+                )}
+              </div>
             </div>
 
             <div className="mt-3 text-sm">
@@ -115,7 +146,9 @@ export function App() {
             </div>
 
             <p className="mt-1 text-xs text-muted-foreground">
-              {potToken ? i18n.t('rateLimitAuth') : i18n.t('rateLimitUnauth')}
+              {(persistedTokenStatus === 'valid' || persistedTokenStatus === 'validating')
+                ? i18n.t('rateLimitAuth')
+                : i18n.t('rateLimitUnauth')}
             </p>
 
             <div className="mt-4 rounded-lg bg-muted p-4">

@@ -23,6 +23,8 @@ tokenLabel: GitHub 个人访问令牌
 tokenPlaceholder: ghp_xxxxxxxxxxxx
 tokenSave: 保存
 tokenClear: 清除
+showToken: 显示令牌
+hideToken: 隐藏令牌
 tokenValid: 令牌有效
 tokenInvalid: 令牌无效
 tokenNone: 未配置令牌
@@ -37,6 +39,10 @@ optionsTitle: 设置
 optionsAuthSection: 身份认证
 optionsAuthDesc: 配置 GitHub 个人访问令牌，将 API 速率限制从每小时 60 次提升至 5,000 次。
 tokenBannerText: 配置令牌以提升速率限制（60 → 5,000 请求/小时）
+tokenBannerMissingTitle: 配置 GitHub 令牌以加载贡献者卡片
+tokenBannerMissingText: 当前未配置令牌。前往设置添加令牌后，卡片才能正常加载，并将速率限制从每小时 60 次提升到 5,000 次。
+tokenBannerInvalidTitle: 更新 GitHub 令牌
+tokenBannerInvalidText: 当前保存的令牌无效或已失效。请打开设置重新配置后，再次加载贡献者卡片。
 tokenBannerAction: 去配置
 repoTrustScore: 仓库信任评分
 profileScore: 个人评分
