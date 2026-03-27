@@ -18,6 +18,7 @@ errorRateLimit: Rate limited. Try again later.
 noData: No contributions found
 retry: Retry
 popupInfo: Shows contributor health metrics on GitHub pull request pages.
+popupOpenSettings: Settings
 tokenLabel: GitHub Personal Access Token
 tokenPlaceholder: ghp_xxxxxxxxxxxx
 tokenSave: Save

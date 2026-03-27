@@ -18,6 +18,7 @@ errorRateLimit: 速率受限，请稍后重试
 noData: 未找到贡献记录
 retry: 重试
 popupInfo: 在 GitHub Pull Request 页面上显示贡献者健康指标。
+popupOpenSettings: 设置
 tokenLabel: GitHub 个人访问令牌
 tokenPlaceholder: ghp_xxxxxxxxxxxx
 tokenSave: 保存
