@@ -1,7 +1,10 @@
 import { i18n } from '#i18n'
 import { useAtomValue } from 'jotai'
+import { globalContributorAtom } from '@/atoms/contributor-global'
+import { repoContributorAtom } from '@/atoms/contributor-repo'
 import { activeTabAtom, profileScoreAtom, repoScoreAtom } from '@/atoms/contributor-score'
 import { Skeleton } from '@/components/ui/skeleton'
+import { RateLimitError } from '@/lib/github-rest'
 import { cn } from '@/lib/utils'
 
 type Tier = 'S' | 'A' | 'B' | 'C' | 'D'
@@ -26,16 +29,53 @@ function HeaderSkeleton() {
   )
 }
 
+function HeaderMessage({ children }: { children: string }) {
+  return (
+    <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+      {children}
+    </div>
+  )
+}
+
 export function ScoreHeader() {
   const tab = useAtomValue(activeTabAtom)
   const repoScore = useAtomValue(repoScoreAtom)
   const profileScore = useAtomValue(profileScoreAtom)
+  const repoQuery = useAtomValue(repoContributorAtom)
+  const globalQuery = useAtomValue(globalContributorAtom)
 
   const score = tab === 'repo' ? repoScore : profileScore
   const label = tab === 'repo' ? i18n.t('repoTrustScore') : i18n.t('profileScore')
+  if (tab === 'repo') {
+    if (repoQuery.isPending)
+      return <HeaderSkeleton />
 
-  if (!score)
-    return <HeaderSkeleton />
+    if (repoQuery.error) {
+      return (
+        <HeaderMessage>
+          {repoQuery.error instanceof RateLimitError ? i18n.t('errorRateLimit') : i18n.t('errorLoad')}
+        </HeaderMessage>
+      )
+    }
+
+    if (!score)
+      return <HeaderMessage>{i18n.t('scoreUnavailable')}</HeaderMessage>
+  }
+  else {
+    if (globalQuery.isPending)
+      return <HeaderSkeleton />
+
+    if (globalQuery.error) {
+      return (
+        <HeaderMessage>
+          {globalQuery.error instanceof RateLimitError ? i18n.t('errorRateLimit') : i18n.t('errorLoad')}
+        </HeaderMessage>
+      )
+    }
+
+    if (!score)
+      return <HeaderMessage>{i18n.t('scoreUnavailable')}</HeaderMessage>
+  }
 
   return (
     <div className="space-y-1">

@@ -17,6 +17,13 @@ export class RateLimitError extends GitHubApiError {
   }
 }
 
+export class GitHubTimeoutError extends GitHubApiError {
+  constructor() {
+    super('GitHub request timed out.', 408)
+    this.name = 'GitHubTimeoutError'
+  }
+}
+
 // —— Types ——
 
 export interface RepoContribution {
@@ -50,11 +57,33 @@ interface GraphQLResponse<T> {
 
 // —— Internal helpers ——
 
+const GITHUB_REQUEST_TIMEOUT_MS = 10_000
+
+async function fetchWithTimeout(input: string, init?: RequestInit): Promise<Response> {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), GITHUB_REQUEST_TIMEOUT_MS)
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    })
+  }
+  catch (error) {
+    if (error instanceof Error && error.name === 'AbortError')
+      throw new GitHubTimeoutError()
+    throw error
+  }
+  finally {
+    clearTimeout(timeoutId)
+  }
+}
+
 async function githubFetch(url: string, token: string): Promise<Response> {
   const headers: Record<string, string> = { Accept: 'application/vnd.github+json' }
   if (token)
     headers.Authorization = `token ${token}`
-  const res = await fetch(url, { headers })
+  const res = await fetchWithTimeout(url, { headers })
   if (res.status === 403 || res.status === 429) {
     const reset = Number(res.headers.get('x-ratelimit-reset')) * 1000
     throw new RateLimitError(reset || Date.now() + 60_000)
@@ -65,7 +94,7 @@ async function githubFetch(url: string, token: string): Promise<Response> {
 }
 
 async function githubGraphQL<T>(query: string, variables: Record<string, string>, token: string): Promise<T> {
-  const res = await fetch('https://api.github.com/graphql', {
+  const res = await fetchWithTimeout('https://api.github.com/graphql', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -100,11 +129,16 @@ async function checkOrgMembership(owner: string, username: string, token: string
     const headers: Record<string, string> = { Accept: 'application/vnd.github+json' }
     if (token)
       headers.Authorization = `token ${token}`
-    const res = await fetch(
+    const res = await fetchWithTimeout(
       `https://api.github.com/orgs/${encodeURIComponent(owner)}/public_members/${encodeURIComponent(username)}`,
       { headers },
     )
-    return res.status === 204
+    // GitHub returns 404 for non-public members and some bot accounts.
+    if (res.status === 204)
+      return true
+    if (res.status === 404)
+      return false
+    return false
   }
   catch {
     return false
@@ -309,7 +343,7 @@ export async function fetchGlobalContribution(
 }
 
 export async function validateToken(token: string): Promise<boolean> {
-  const res = await fetch('https://api.github.com/user', {
+  const res = await fetchWithTimeout('https://api.github.com/user', {
     headers: { Authorization: `token ${token}` },
   })
   return res.ok
