@@ -16,6 +16,7 @@ loading: Loading...
 errorLoad: Unable to load contributor data
 errorRateLimit: Rate limited. Try again later.
 noData: No contributions found
+scoreUnavailable: Score unavailable for this account
 retry: Retry
 popupInfo: Shows contributor health metrics on GitHub pull request pages.
 popupOpenSettings: Settings

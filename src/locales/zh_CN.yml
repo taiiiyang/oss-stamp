@@ -16,6 +16,7 @@ loading: 加载中...
 errorLoad: 无法加载贡献者数据
 errorRateLimit: 速率受限，请稍后重试
 noData: 未找到贡献记录
+scoreUnavailable: 当前账号暂不支持评分
 retry: 重试
 popupInfo: 在 GitHub Pull Request 页面上显示贡献者健康指标。
 popupOpenSettings: 设置
