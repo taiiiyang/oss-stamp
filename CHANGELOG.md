@@ -1,5 +1,11 @@
 # oss-stamp
 
+## 0.3.1
+
+### Patch Changes
+
+- 5c2c55c: Prevent contributor score cards from hanging in a loading state for bot and action accounts by timing out stalled GitHub requests and showing an unavailable score state instead.
+
 ## 0.3.0
 
 ### Minor Changes
